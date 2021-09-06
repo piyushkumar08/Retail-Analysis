@@ -36,8 +36,7 @@ Also uploaded above by the name : "Walmart_Store_sales.csv"
 
 
 ## 4. Implementation <a name="model"></a> 
-Before modellling, Outlier Testing is done to remove all the outliers for different variables. After that, the data have been split into training and testing with a ratio of 70:30
-
+Before modellling, Outlier Testing is done to remove all the outliers for different variables. After that, the data have been split into training and testing with a ratio of 70:30. Modelling is done on train data and after that testing is performed.
 
 ## 5. Result<a name="results"></a>
 The details of the results show in the "Retail-Analysis_Insights.pdf" uploaded above.
