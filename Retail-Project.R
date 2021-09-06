@@ -137,3 +137,67 @@ summary(wlm_model)
 wlm_test$Pred_Sales <- predict(wlm_model,newdata=wlm_test)
 View(wlm_test)
 
+#----------Time-series modelling -----------------------
+
+wlmts <- summarize(group_by(wlm,Date),Weekly_Sales = sum(Weekly_Sales))
+
+plot(wlmts)
+#We can see a Seasonal Trend in the plot 
+
+class(wlmts)
+str(wlmts)
+wlmts$Date =as.Date(wlmts$Date,format=c("%m/%d/%Y"))
+
+#Creating a dataset having month-wise sales for all the years
+wlmts = mutate(wlmts,Year =format(Date,"%Y"), Day=format(Date,"%d"),Month =format(Date,"%m"))
+str(wlmts)
+wlmts$Year <- as.numeric(wlmts$Year)
+wlmts$Month <- as.numeric(wlmts$Month)
+wlmts$Day <- as.numeric(wlmts$Day)
+str(wlmts)
+View(wlmts)
+
+wlmts = select(wlmts,Year,Month,Day,Weekly_Sales)
+View(wlmts)
+
+#Sorting date wise
+Wlmts = arrange(wlmts,Year,Month,Day)
+View(Wlmts)
+
+# creating a Column with month and year of sale
+wlmts = mutate(Wlmts,Time_Of_Sale = as.Date(paste(Year,"-",Month,"-",1,sep="")))
+View(wlmts)
+#Removing unwanted columns
+wlmts <- wlmts[,-(1:3)]
+wlmts <- select(wlmts,Time_Of_Sale,Weekly_Sales)
+wlmts <- summarize(group_by(wlmts,Time_Of_Sale),Weekly_Sales = sum(Weekly_Sales))
+
+library("tsbox")
+ts_xts(wlmts)
+#Modelling
+library(forecast)
+
+#Using auto-arima to get best values of p,d,f values making our model
+#more efficient
+
+Walmart_ARIMA = arima(wlmts[1:30,2], order = c(2,1,2), method = "ML")
+summary(Walmart_ARIMA)
+#Forecasting for next year
+Forecasted_Sale = forecast(Walmart_ARIMA,h=12)
+plot(Forecasted_Sale)
+
+Forecasted_Sale <- as.data.frame(Forecasted_Sale)
+View(Forecasted_Sale)
+Frcst <- Forecasted_Sale[,1]
+View(Frcst)
+
+Actual_Sales = wlmts[31:42,]
+
+# concatenating forecast and actual
+Actual_vs_Forecst_last = cbind(Forecasted_Sale,Actual_Sales)
+View(Actual_vs_Forecst_last)
+Actual_vs_Forecst_last_deviation = transform(Actual_vs_Forecst_last, 
+                                             Errors = abs(Forecasted_Sale-Weekly_Sales)/Weekly_Sales)
+Actual_vs_Forecst_last_deviation <- select(Actual_vs_Forecst_last_deviation,Point.Forecast,Time_Of_Sale,Weekly_Sales)
+View(Actual_vs_Forecst_last_deviation)
+
